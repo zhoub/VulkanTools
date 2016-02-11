@@ -1460,7 +1460,7 @@ class Subcommand(object):
         cb_body.append('                    returnValue = vktrace_replay::VKTRACE_REPLAY_ERROR;')
         cb_body.append('                    break;')
         cb_body.append('                }')
-        cb_body.append('                VkFlags reportFlags = VK_DEBUG_REPORT_INFO_BIT_EXT | VK_DEBUG_REPORT_WARN_BIT_EXT | VK_DEBUG_REPORT_PERF_WARN_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;')
+        cb_body.append('                VkFlags reportFlags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;')
         cb_body.append('                PFN_vkCreateDebugReportCallbackEXT callback = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(remappedInstance, "vkCreateDebugReportCallbackEXT");')
         cb_body.append('                if (callback != NULL) {')
         cb_body.append('                    VkDebugReportCallbackCreateInfoEXT dbgCreateInfo;')
