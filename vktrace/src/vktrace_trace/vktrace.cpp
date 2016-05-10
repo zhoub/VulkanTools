@@ -243,11 +243,11 @@ int main(int argc, char* argv[])
     if (g_settings.screenshotList)
     {
         // Export list to screenshot layer
-        vktrace_set_global_var("_VK_SCREENSHOT", g_settings.screenshotList);
+        vktrace_set_global_var("VK_LUNARG_SCREENSHOT", g_settings.screenshotList);
     }
     else
     {
-        vktrace_set_global_var("_VK_SCREENSHOT","");
+        vktrace_set_global_var("VK_LUNARG_SCREENSHOT","");
     }
 
 

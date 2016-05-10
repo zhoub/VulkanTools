@@ -82,7 +82,7 @@ static unordered_map<VkPhysicalDevice, PhysDeviceMapStruct *> physDeviceMap;
 // List of frames to we will get a screenshot of
 static vector<int> screenshotFrames;
 
-// Flag indicating we have queried _VK_SCREENSHOT env var
+// Flag indicating we have queried VK_LUNARG_SCREENSHOT env var
 static bool screenshotEnvQueried = false;
 
 static bool memory_type_from_properties(VkPhysicalDeviceMemoryProperties *memory_properties, uint32_t typeBits,
@@ -638,7 +638,7 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkQueuePresentKHR(VkQueue queue, 
     loader_platform_thread_lock_mutex(&globalLock);
 
     if (!screenshotEnvQueried) {
-        const char *_vk_screenshot = loader_getenv("_VK_SCREENSHOT");
+        const char *_vk_screenshot = loader_getenv("VK_LUNARG_SCREENSHOT");
         if (_vk_screenshot && *_vk_screenshot) {
             string spec(_vk_screenshot), word;
             size_t start = 0, comma = 0;

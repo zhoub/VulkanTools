@@ -223,12 +223,12 @@ int main(int argc, char **argv)
     if (replaySettings.screenshotList != NULL)
     {
         // Set env var that communicates list to ScreenShot layer
-        vktrace_set_global_var("_VK_SCREENSHOT", replaySettings.screenshotList);
+        vktrace_set_global_var("VK_LUNARG_SCREENSHOT", replaySettings.screenshotList);
 
     }
     else
     {
-        vktrace_set_global_var("_VK_SCREENSHOT","");
+        vktrace_set_global_var("VK_LUNARG_SCREENSHOT","");
     }
 
     // open trace file and read in header
