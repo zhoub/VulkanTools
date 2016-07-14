@@ -25,6 +25,8 @@ These additional packages are needed for building the components in this repo.
 sudo apt-get install git cmake build-essential bison libx11-dev libxcb1-dev
 # Additional dependencies for this repo:
 sudo apt-get install libudev-dev libpciaccess-dev libxcb-dri3-dev libxcb-present-dev libmagickwand-dev libgl1-mesa-dev wget autotools-dev
+# Additional dependencies for this repo for 32-bit build on 64-bit platform:
+sudo apt-get install libc6-dev-i386 g++-multilib x11-utils:i386 libxcb-dri3-dev:i386
 ```
 
 If you are using the sample Intel Vulkan driver in this repo, you will have to ensure that
@@ -56,6 +58,12 @@ Example debug build:
 ```
 cd YOUR_DEV_DIRECTORY/VulkanTools  # cd to the root of the VulkanTools git repository
 cmake -H. -Bdbuild -DCMAKE_BUILD_TYPE=Debug
+cd dbuild
+make
+
+Example 32-bit debug build:
+cd YOUR_DEV_DIRECTORY/VulkanTools  # cd to the root of the VulkanTools git repository
+cmake -H. -Bdbuild32 -DCMAKE_BUILD_TYPE=Debug -DBUILD_X64=OFF
 cd dbuild
 make
 ```

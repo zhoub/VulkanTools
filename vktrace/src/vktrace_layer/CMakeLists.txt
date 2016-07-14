@@ -87,10 +87,16 @@ include_directories(
 if (NOT WIN32)
     # extra setup for out-of-tree builds
     if (NOT (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR))
-        add_custom_target(vktrace_layer-json ALL
-            COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/linux/VkLayer_vktrace_layer.json ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}../layersvt/
-            VERBATIM
-            )
+	if (BUILD_X64)
+                    add_custom_target(vktrace_layer-json ALL
+                    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/linux/VkLayer_vktrace_layer.json ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}../layersvt/
+                    VERBATIM
+                    )
+        elseif (NOT BUILD_X64)
+	            add_custom_target(vktrace_layer-json ALL
+                    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/linux/VkLayer_vktrace_layer_32.json ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}../layersvt/VkLayer_vktrace_layer.json
+                    )
+        endif()
     endif()
 else()
     if (NOT (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR))

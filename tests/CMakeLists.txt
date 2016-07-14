@@ -36,6 +36,7 @@ if(WIN32)
 
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16")
+    #32bit linux for tests are not compiling due to libmagickwand incompatibility, once resolved add here
 endif()
 
 set (LIBGLM_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/libs)
