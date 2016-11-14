@@ -25,10 +25,6 @@
 #include "vktrace_lib_pageguardcapture.h"
 #include "vktrace_lib_pageguard.h"
 
-#if defined(PLATFORM_LINUX)
-extern void getMappedDirtyPagesLinux(void);
-#endif
-
 VkDevice& PageGuardMappedMemory::getMappedDevice()
 {
     return MappedDevice;
@@ -270,24 +266,16 @@ bool PageGuardMappedMemory::setAllPageGuardAndFlag(bool bSetPageGuard, bool bSet
     bool setSuccessfully = true;
     #if defined(WIN32)
     DWORD dwMemSetting = bSetPageGuard ? (PAGE_READWRITE | PAGE_GUARD) : PAGE_READWRITE;
-    #endif
 
     for (uint64_t i = 0; i < PageGuardAmount; i++)
     {
         setMappedBlockChanged(i, bSetBlockChanged, BLOCK_FLAG_ARRAY_CHANGED);
-        #if defined(WIN32)
         DWORD oldProt, dwErr;
         if (!VirtualProtect(pMappedData + i*PageGuardSize, (SIZE_T)getMappedBlockSize(i), dwMemSetting, &oldProt))
         {
             dwErr = GetLastError();
             setSuccessfully = false;
         }
-        #endif
-    }
-    #if defined(PLATFORM_LINUX)
-    if (bSetPageGuard)
-    {
-        getMappedDirtyPagesLinux();
     }
     #endif
     return setSuccessfully;
