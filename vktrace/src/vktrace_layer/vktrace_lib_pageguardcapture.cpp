@@ -39,7 +39,7 @@ PageGuardCapture::PageGuardCapture()
     snprintf(clearRefsPath, sizeof(clearRefsPath), "/proc/%d/clear_refs", getpid());
     clearRefsFd = open(clearRefsPath, O_WRONLY);
     if (clearRefsFd < 0)
-        vktrace_LogError("Open of %s failed, attempting to continue...", clearRefsPath);
+        vktrace_LogError("Open of %s failed, attempting to continue", clearRefsPath);
 #endif
 
 }
@@ -383,7 +383,8 @@ void PageGuardCapture::pageRefsDirtyClear()
     if (clearRefsFd >=0)
     {
         lseek(clearRefsFd, 0, SEEK_SET);
-        write(clearRefsFd, &four, 1);
+        if (1 != write(clearRefsFd, &four, 1))
+            vktrace_LogError("Write to clear_refs file failed, attempting to continue");
     }
 }
 #endif
