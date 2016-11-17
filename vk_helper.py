@@ -376,9 +376,25 @@ def recreate_structs():
 # TODO: Fix construction of struct name
 def get_struct_name_from_struct_type(struct_type):
     # Note: All struct types are now camel-case
-    # Debug Report has an inconsistency - so need special case.
+
+    # Handle all the special cases
     if ("VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT" == struct_type):
         return "VkDebugReportCallbackCreateInfoEXT"
+    if ("VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_IMAGE_CREATE_INFO_NV" == struct_type):
+        return "VkDedicatedAllocationImageCreateInfoNV"
+    if ("VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV" == struct_type):
+        return "VkDedicatedAllocationBufferCreateInfoNV"
+    if ("VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV" == struct_type):
+        return "VkDedicatedAllocationMemoryAllocateInfoNV"
+    if ("VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_NV" == struct_type):
+        return "VkExternalMemoryCreateInfoNV"
+    if ("VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_NV" == struct_type):
+        return "VkExportMemoryAllocateInfoNV"
+    if ("VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_NV" == struct_type):
+        return "VkImportMemoryWin32HandleInfoNV"
+    if ("VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_NV" == struct_type):
+        return "VkExportMemoryWin32HandleInfoNV"
+
     caps_struct_name = struct_type.replace("_STRUCTURE_TYPE", "")
     char_idx = 0
     struct_name = ''
