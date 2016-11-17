@@ -258,7 +258,22 @@ static void rm_handle_from_mem_info(const VkDeviceMemory handle)
 
 static void add_alloc_memory_to_trace_packet(vktrace_trace_packet_header* pHeader, void** ppOut, const void* pIn)
 {
-    return;
+    // Need to handle a chain of these??
+    // What about VkExportMemoryAllocateInfoNV??
+
+    if (!pIn)
+        return;
+    if (((VkDedicatedAllocationMemoryAllocateInfoNV *)pIn)->pNext)
+    {
+        vktrace_LogError("vkAllocateMemory bug: chain of pNext not yet implemented");
+    }
+    if (((VkDedicatedAllocationMemoryAllocateInfoNV *)pIn)->sType != VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV)
+    {
+        vktrace_LogError("vkAllocateMemory: unrecognized structure type for pAllocateInfo->pNext, %ld, need to implement", ((VkDedicatedAllocationMemoryAllocateInfoNV *)pIn)->sType);
+        return;
+    }
+    vktrace_add_buffer_to_trace_packet(pHeader, ppOut, sizeof(VkDedicatedAllocationMemoryAllocateInfoNV), pIn);
+    vktrace_finalize_buffer_address(pHeader, ppOut);
 }
 
 static void add_VkPipelineShaderStageCreateInfo_to_trace_packet(vktrace_trace_packet_header* pHeader, VkPipelineShaderStageCreateInfo* packetShader, const VkPipelineShaderStageCreateInfo* paramShader)
