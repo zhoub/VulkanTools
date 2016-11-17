@@ -258,22 +258,35 @@ static void rm_handle_from_mem_info(const VkDeviceMemory handle)
 
 static void add_alloc_memory_to_trace_packet(vktrace_trace_packet_header* pHeader, void** ppOut, const void* pIn)
 {
-    // Need to handle a chain of these??
-    // What about VkExportMemoryAllocateInfoNV??
+    while (pIn)
+    {
+        switch (((VkApplicationInfo *)pIn)->sType)
+        {
+        case VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV:
+            vktrace_add_buffer_to_trace_packet(pHeader, ppOut, sizeof(VkDedicatedAllocationMemoryAllocateInfoNV), pIn);
+            vktrace_finalize_buffer_address(pHeader, ppOut);
+            break;
+        case VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_NV:
+            vktrace_add_buffer_to_trace_packet(pHeader, ppOut, sizeof(VkExportMemoryAllocateInfoNV), pIn);
+            vktrace_finalize_buffer_address(pHeader, ppOut);
+            break;
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+        case VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_NV:
+            vktrace_add_buffer_to_trace_packet(pHeader, ppOut, sizeof(VkExportMemoryWin32HandleInfoNV), pIn);
+            vktrace_finalize_buffer_address(pHeader, ppOut);
+            break;
 
-    if (!pIn)
-        return;
-    if (((VkDedicatedAllocationMemoryAllocateInfoNV *)pIn)->pNext)
-    {
-        vktrace_LogError("vkAllocateMemory bug: chain of pNext not yet implemented");
+        case VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_NV:
+            vktrace_add_buffer_to_trace_packet(pHeader, ppOut, sizeof(VkImportMemoryWin32HandleInfoNV), pIn);
+            vktrace_finalize_buffer_address(pHeader, ppOut);
+            break;
+#endif
+        default:
+            vktrace_LogError("vkAllocateMemory: unrecognize pAllocate pNext list structure");
+            break;
+        }
+        pIn = ((VkApplicationInfo *)pIn)->pNext;
     }
-    if (((VkDedicatedAllocationMemoryAllocateInfoNV *)pIn)->sType != VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV)
-    {
-        vktrace_LogError("vkAllocateMemory: unrecognized structure type for pAllocateInfo->pNext, %ld, need to implement", ((VkDedicatedAllocationMemoryAllocateInfoNV *)pIn)->sType);
-        return;
-    }
-    vktrace_add_buffer_to_trace_packet(pHeader, ppOut, sizeof(VkDedicatedAllocationMemoryAllocateInfoNV), pIn);
-    vktrace_finalize_buffer_address(pHeader, ppOut);
 }
 
 static void add_VkPipelineShaderStageCreateInfo_to_trace_packet(vktrace_trace_packet_header* pHeader, VkPipelineShaderStageCreateInfo* packetShader, const VkPipelineShaderStageCreateInfo* paramShader)
