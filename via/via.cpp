@@ -2546,6 +2546,7 @@ void PrintDriverInfo(void) {
     uint32_t j = 0;
     bool found_json = false;
     bool found_lib = false;
+    char *env_value = NULL;
 
     PrintBeginTable("Vulkan Driver Info", 3);
 
@@ -2568,7 +2569,7 @@ void PrintDriverInfo(void) {
             cur_driver_path = "/usr/local/share/vulkan/icd.d";
             break;
         case 4:
-            char *env_value = getenv("HOME");
+            env_value = getenv("HOME");
             if (NULL == env_value) {
                 cur_driver_path = "~/.local/share/vulkan/icd.d";
             } else {
@@ -2576,14 +2577,13 @@ void PrintDriverInfo(void) {
                 cur_driver_path += "/.local/share/vulkan/icd.d";
             }
             break;
-        case 5: {
-            char *env_value = getenv("VK_DRIVERS_PATH");
+        case 5:
+            env_value = getenv("VK_DRIVERS_PATH");
             if (NULL == env_value) {
                 continue;
             }
             cur_driver_path = env_value;
             break;
-        }
         default:
             continue;
         }
@@ -3196,11 +3196,11 @@ void PrintLayerInfo(void) {
     uint32_t i = 0;
     char generic_string[MAX_STRING_LENGTH];
     bool failed = false;
-    bool found_explicit = false;
     char cur_vulkan_layer_json[MAX_STRING_LENGTH];
     DIR *layer_dir;
     dirent *cur_ent;
     std::string layer_path;
+    char *env_value = NULL;
 
     // Dump out implicit layer information first
     PrintBeginTable("Implicit Layers", 3);
@@ -3223,7 +3223,7 @@ void PrintLayerInfo(void) {
             cur_layer_path = "/usr/local/share/vulkan/implicit_layer.d";
             break;
         case 4:
-            char *env_value = getenv("HOME");
+            env_value = getenv("HOME");
             if (NULL == env_value) {
                 cur_layer_path = "~/.local/share/vulkan/implicit_layer.d";
             } else {
@@ -3241,13 +3241,13 @@ void PrintLayerInfo(void) {
         PrintTableElement("");
         PrintEndTableRow();
 
-        layer_dir = opendir(cur_layer_path);
+        layer_dir = opendir(cur_layer_path.c_str());
         if (NULL != layer_dir) {
             while ((cur_ent = readdir(layer_dir)) != NULL) {
                 if (NULL != strstr(cur_ent->d_name, ".json")) {
                     snprintf(generic_string, MAX_STRING_LENGTH - 1, "[%d]", i++);
                     snprintf(cur_vulkan_layer_json, MAX_STRING_LENGTH - 1, "%s/%s",
-                        cur_layer_path, cur_ent->d_name);
+                             cur_layer_path.c_str(), cur_ent->d_name);
 
                     PrintBeginTableRow();
                     PrintTableElement(generic_string, ALIGN_RIGHT);
@@ -3306,24 +3306,29 @@ void PrintLayerInfo(void) {
     // try all of them.
     for (uint32_t dir = 0; dir < 6; dir++) {
         std::string cur_layer_path;
-        std::string explicit_layer_id = cur_layer_path;
+        std::string explicit_layer_id;
         std::string explicit_layer_path = cur_layer_path;
+        char *env_value = NULL;
         switch (dir) {
         case 0:
             cur_layer_path = "/etc/vulkan/explicit_layer.d";
+            explicit_layer_id = "/etc/vulkan";
             break;
         case 1:
             cur_layer_path = "/usr/share/vulkan/explicit_layer.d";
+            explicit_layer_id = "/usr/share/vulkan";
             break;
         case 2:
             cur_layer_path = "/usr/local/etc/vulkan/explicit_layer.d";
+            explicit_layer_id = "/usr/local/etc/vulkan";
             break;
         case 3:
             cur_layer_path = "/usr/local/share/vulkan/explicit_layer.d";
+            explicit_layer_id = "/usr/local/share/vulkan";
             break;
         case 4:
             explicit_layer_id = "$HOME/.local/share/vulkan/explicit_layer.d";
-            char *env_value = getenv("HOME");
+            env_value = getenv("HOME");
             if (NULL == env_value) {
                 cur_layer_path = "~/.local/share/vulkan/explicit_layer.d";
             } else {
@@ -3333,7 +3338,7 @@ void PrintLayerInfo(void) {
             break;
         case 5:
             explicit_layer_id = "VK_LAYER_PATH";
-            char *env_value = getenv("VK_LAYER_PATH");
+            env_value = getenv("VK_LAYER_PATH");
             if (NULL == env_value) {
                 continue;
             }
