@@ -347,6 +347,11 @@ void StartOutput(std::string output) {
         << "            font-size: 25px;" << std::endl
         << "            color: #FFFFFF;" << std::endl
         << "        }" << std::endl
+        << "        h2.note {" << std::endl
+        << "            font-family: sans-serif;" << std::endl
+        << "            font-size: 22px;" << std::endl
+        << "            color: #FFFFFF;" << std::endl
+        << "        }" << std::endl
         << "        table {" << std::endl
         << "            min-width: 600px;" << std::endl
         << "            width: 70%;" << std::endl
@@ -410,8 +415,11 @@ void StartOutput(std::string output) {
     }
     global_items.html_file_stream << APP_VERSION << "</center></h1>"
                                   << std::endl
-                                  << "    <BR />" << std::endl
                                   << "    <BR />" << std::endl;
+
+    global_items.html_file_stream << APP_VERSION << "<center><h2 class=\"note\">< NOTE: Click on section name to expand table ></h2></center>"
+        << std::endl
+        << "    <BR />" << std::endl;
 }
 
 // Close out writing to the HTML file.
@@ -796,9 +804,13 @@ int RunTestInDirectory(std::string path, std::string test,
         if (TRUE == PathFileExists(test.c_str())) {
             err_code = system(cmd_line.c_str());
         } else {
+            // Path to specific exe doesn't exist
             err_code = 1;
         }
         SetCurrentDirectoryA(orig_dir);
+    } else {
+        // Path to test doesn't exist.
+        err_code = 1;
     }
     return err_code;
 }
@@ -2537,9 +2549,9 @@ void PrintDriverInfo(void) {
 
     PrintBeginTable("Vulkan Driver Info", 3);
 
-    // There are three folders ICD JSONs could be in.  So,
-    // try all three.
-    for (uint32_t dir = 0; dir < 5; dir++) {
+    // There are several folders ICD JSONs could be in.  So,
+    // try all of them.
+    for (uint32_t dir = 0; dir < 6; dir++) {
         std::string cur_driver_path;
         std::string cur_driver_json;
         switch (dir) {
@@ -2555,7 +2567,16 @@ void PrintDriverInfo(void) {
         case 3:
             cur_driver_path = "/usr/local/share/vulkan/icd.d";
             break;
-        case 4: {
+        case 4:
+            char *env_value = getenv("HOME");
+            if (NULL == env_value) {
+                cur_driver_path = "~/.local/share/vulkan/icd.d";
+            } else {
+                cur_driver_path = env_value;
+                cur_driver_path += "/.local/share/vulkan/icd.d";
+            }
+            break;
+        case 5: {
             char *env_value = getenv("VK_DRIVERS_PATH");
             if (NULL == env_value) {
                 continue;
@@ -3175,96 +3196,154 @@ void PrintLayerInfo(void) {
     uint32_t i = 0;
     char generic_string[MAX_STRING_LENGTH];
     bool failed = false;
+    bool found_explicit = false;
     char cur_vulkan_layer_json[MAX_STRING_LENGTH];
     DIR *layer_dir;
     dirent *cur_ent;
-    const char implicit_layer_dir[] = "/etc/vulkan/implicit_layer.d";
-    const char explicit_layer_dir[] = "/etc/vulkan/explicit_layer.d";
     std::string layer_path;
 
     // Dump out implicit layer information first
     PrintBeginTable("Implicit Layers", 3);
-    PrintBeginTableRow();
-    PrintTableElement("Location");
-    PrintTableElement(implicit_layer_dir);
-    PrintTableElement("");
-    PrintEndTableRow();
 
-    layer_dir = opendir(implicit_layer_dir);
-    if (NULL != layer_dir) {
-        while ((cur_ent = readdir(layer_dir)) != NULL) {
-            if (NULL != strstr(cur_ent->d_name, ".json")) {
-                snprintf(generic_string, MAX_STRING_LENGTH - 1, "[%d]", i++);
-                snprintf(cur_vulkan_layer_json, MAX_STRING_LENGTH - 1, "%s/%s",
-                         implicit_layer_dir, cur_ent->d_name);
+    // There are several folders implicit layers could be in.  So,
+    // try all of them.
+    for (uint32_t dir = 0; dir < 5; dir++) {
+        std::string cur_layer_path;
+        switch (dir) {
+        case 0:
+            cur_layer_path = "/etc/vulkan/implicit_layer.d";
+            break;
+        case 1:
+            cur_layer_path = "/usr/share/vulkan/implicit_layer.d";
+            break;
+        case 2:
+            cur_layer_path = "/usr/local/etc/vulkan/implicit_layer.d";
+            break;
+        case 3:
+            cur_layer_path = "/usr/local/share/vulkan/implicit_layer.d";
+            break;
+        case 4:
+            char *env_value = getenv("HOME");
+            if (NULL == env_value) {
+                cur_layer_path = "~/.local/share/vulkan/implicit_layer.d";
+            } else {
+                cur_layer_path = env_value;
+                cur_layer_path += "/.local/share/vulkan/implicit_layer.d";
+            }
+            break;
+        default:
+            continue;
+        }
 
-                PrintBeginTableRow();
-                PrintTableElement(generic_string, ALIGN_RIGHT);
-                PrintTableElement(cur_ent->d_name);
-                PrintTableElement("");
-                PrintEndTableRow();
+        PrintBeginTableRow();
+        PrintTableElement(cur_layer_path);
+        PrintTableElement("");
+        PrintTableElement("");
+        PrintEndTableRow();
 
-                std::ifstream *stream = NULL;
-                stream =
-                    new std::ifstream(cur_vulkan_layer_json, std::ifstream::in);
-                if (nullptr == stream || stream->fail()) {
+        layer_dir = opendir(cur_layer_path);
+        if (NULL != layer_dir) {
+            while ((cur_ent = readdir(layer_dir)) != NULL) {
+                if (NULL != strstr(cur_ent->d_name, ".json")) {
+                    snprintf(generic_string, MAX_STRING_LENGTH - 1, "[%d]", i++);
+                    snprintf(cur_vulkan_layer_json, MAX_STRING_LENGTH - 1, "%s/%s",
+                        cur_layer_path, cur_ent->d_name);
+
                     PrintBeginTableRow();
-                    PrintTableElement("");
-                    PrintTableElement("ERROR reading JSON file!");
+                    PrintTableElement(generic_string, ALIGN_RIGHT);
+                    PrintTableElement(cur_ent->d_name);
                     PrintTableElement("");
                     PrintEndTableRow();
-                    failed = true;
-                } else {
-                    Json::Value root = Json::nullValue;
-                    Json::Reader reader;
-                    if (!reader.parse(*stream, root, false) || root.isNull()) {
-                        // Report to the user the failure and their
-                        // locations in the document.
+
+                    std::ifstream *stream = NULL;
+                    stream =
+                        new std::ifstream(cur_vulkan_layer_json, std::ifstream::in);
+                    if (nullptr == stream || stream->fail()) {
                         PrintBeginTableRow();
                         PrintTableElement("");
-                        PrintTableElement("ERROR parsing JSON file!");
-                        PrintTableElement(reader.getFormattedErrorMessages());
+                        PrintTableElement("ERROR reading JSON file!");
+                        PrintTableElement("");
                         PrintEndTableRow();
                         failed = true;
                     } else {
-                        PrintExplicitLayerJsonInfo(cur_vulkan_layer_json, root,
-                                                   3);
-                    }
+                        Json::Value root = Json::nullValue;
+                        Json::Reader reader;
+                        if (!reader.parse(*stream, root, false) || root.isNull()) {
+                            // Report to the user the failure and their
+                            // locations in the document.
+                            PrintBeginTableRow();
+                            PrintTableElement("");
+                            PrintTableElement("ERROR parsing JSON file!");
+                            PrintTableElement(reader.getFormattedErrorMessages());
+                            PrintEndTableRow();
+                            failed = true;
+                        } else {
+                            PrintExplicitLayerJsonInfo(cur_vulkan_layer_json, root,
+                                                       3);
+                        }
 
-                    stream->close();
-                    delete stream;
-                    stream = NULL;
+                        stream->close();
+                        delete stream;
+                        stream = NULL;
+                    }
                 }
             }
+            closedir(layer_dir);
+        } else {
+            PrintBeginTableRow();
+            PrintTableElement("");
+            PrintTableElement("Directory does not exist");
+            PrintTableElement("");
+            PrintEndTableRow();
         }
-        closedir(layer_dir);
-    } else {
-        PrintBeginTableRow();
-        PrintTableElement("");
-        PrintTableElement("Directory does not exist");
-        PrintTableElement("");
-        PrintEndTableRow();
     }
     PrintEndTable();
 
     // Dump out any explicit layer information.
     PrintBeginTable("Explicit Layers", 3);
 
-    std::string explicit_layer_id = "Global path";
-    std::string explicit_layer_path = explicit_layer_dir;
-
-    if (!PrintExplicitLayersInFolder(explicit_layer_id, explicit_layer_path)) {
-        failed = true;
-    }
-
-    explicit_layer_id = "VK_LAYER_PATH";
-    char *env_value = getenv("VK_LAYER_PATH");
-    if (NULL != env_value) {
-        explicit_layer_path = env_value;
-        if (!PrintExplicitLayersInFolder(explicit_layer_id,
-                                         explicit_layer_path)) {
-            failed = true;
+    // There are several folders explicit layers could be in.  So,
+    // try all of them.
+    for (uint32_t dir = 0; dir < 6; dir++) {
+        std::string cur_layer_path;
+        std::string explicit_layer_id = cur_layer_path;
+        std::string explicit_layer_path = cur_layer_path;
+        switch (dir) {
+        case 0:
+            cur_layer_path = "/etc/vulkan/explicit_layer.d";
+            break;
+        case 1:
+            cur_layer_path = "/usr/share/vulkan/explicit_layer.d";
+            break;
+        case 2:
+            cur_layer_path = "/usr/local/etc/vulkan/explicit_layer.d";
+            break;
+        case 3:
+            cur_layer_path = "/usr/local/share/vulkan/explicit_layer.d";
+            break;
+        case 4:
+            explicit_layer_id = "$HOME/.local/share/vulkan/explicit_layer.d";
+            char *env_value = getenv("HOME");
+            if (NULL == env_value) {
+                cur_layer_path = "~/.local/share/vulkan/explicit_layer.d";
+            } else {
+                cur_layer_path = env_value;
+                cur_layer_path += "/.local/share/vulkan/explicit_layer.d";
+            }
+            break;
+        case 5:
+            explicit_layer_id = "VK_LAYER_PATH";
+            char *env_value = getenv("VK_LAYER_PATH");
+            if (NULL == env_value) {
+                continue;
+            }
+            cur_layer_path = env_value;
+            break;
+        default:
+            continue;
         }
+
+        PrintExplicitLayersInFolder(explicit_layer_id, cur_layer_path);
     }
 
     PrintEndTable();
@@ -3294,6 +3373,9 @@ int RunTestInDirectory(std::string path, std::string test,
                 // exe.  So, just return a separate error code.
                 err_code = 1;
             }
+        } else {
+            // Path doesn't exist at all
+            err_code = 1;
         }
         chdir(orig_dir);
     }
